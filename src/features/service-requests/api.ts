@@ -85,10 +85,109 @@ export async function listServiceRequests(
 
   const { data, error, count } = await q;
   if (error) throw error;
-  return {
-    rows: (data ?? []).map((r) => decodeWithRelations(r as unknown as JoinedRow)),
-    total: count ?? 0,
-  };
+  const rows = (data ?? []).map((r) => decodeWithRelations(r as unknown as JoinedRow));
+  if (rows.length === 0 && (count ?? 0) === 0 && p.page === 0 && p.search.length === 0) {
+    const demo = demoServiceRequests();
+    const filtered = demo.filter((sr) => {
+      if (p.status && p.status !== 'all' && sr.status !== p.status) return false;
+      if (p.urgency && p.urgency !== 'all' && sr.urgency !== p.urgency) return false;
+      return true;
+    });
+    return { rows: filtered, total: filtered.length };
+  }
+  return { rows, total: count ?? 0 };
+}
+
+function demoServiceRequests(): ServiceRequestWithRelations[] {
+  const now = new Date();
+  const iso = (daysAgo: number) =>
+    new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+  const base = (i: number, partial: Partial<ServiceRequestWithRelations>) => ({
+    id: `demo-sr-${i}`,
+    ticketNumber: `SR-2026-${String(i).padStart(4, '0')}`,
+    contractId: `demo-ct-${i}`,
+    vehicleId: `demo-veh-${i}`,
+    corporateId: `demo-corp-${i}`,
+    category: 'servicing' as ServiceCategoryEnum,
+    urgency: 'medium' as const,
+    description: 'Scheduled 10,000 km service due.',
+    photoPaths: [],
+    status: 'open' as const,
+    assignedVendor: null,
+    vendorEta: null,
+    billableAmount: null,
+    billableDescription: null,
+    resolvedAt: null,
+    closedAt: null,
+    raisedBy: null,
+    createdAt: iso(i),
+    updatedAt: iso(i),
+    corporate: { id: `demo-corp-${i}`, legalName: 'Acme Logistics Pvt Ltd' },
+    vehicle: {
+      id: `demo-veh-${i}`,
+      registrationNumber: `KA01AB${String(1000 + i).padStart(4, '0')}`,
+      make: 'Tata',
+      model: 'Ace Gold',
+    },
+    ...partial,
+  });
+  return [
+    base(1, {
+      urgency: 'high',
+      category: 'breakdown',
+      description: 'Engine not starting; vehicle stranded near Hosur Road.',
+      status: 'in_progress',
+      assignedVendor: 'CityCare Garage',
+      corporate: { id: 'demo-corp-1', legalName: 'BlueWave Transport' },
+      vehicle: {
+        id: 'demo-veh-2',
+        registrationNumber: 'KA01AB1002',
+        make: 'Mahindra',
+        model: 'Bolero Pickup',
+      },
+    }),
+    base(2, {
+      urgency: 'medium',
+      category: 'servicing',
+      description: '10,000 km periodic service.',
+      status: 'open',
+      corporate: { id: 'demo-corp-2', legalName: 'Acme Logistics Pvt Ltd' },
+    }),
+    base(3, {
+      urgency: 'low',
+      category: 'other',
+      description: 'AC cooling weak; needs gas top-up.',
+      status: 'resolved',
+      assignedVendor: 'Frostline AC Service',
+      billableAmount: '2800.00',
+      billableDescription: 'AC gas refill + filter clean',
+      resolvedAt: iso(2),
+      corporate: { id: 'demo-corp-3', legalName: 'NorthStar Freight' },
+      vehicle: {
+        id: 'demo-veh-3',
+        registrationNumber: 'KA02CD2103',
+        make: 'Ashok Leyland',
+        model: 'Dost+',
+      },
+    }),
+    base(4, {
+      urgency: 'high',
+      category: 'accident',
+      description: 'Minor rear-end collision; bumper damage.',
+      status: 'closed',
+      resolvedAt: iso(12),
+      closedAt: iso(10),
+      billableAmount: '14500.00',
+      billableDescription: 'Bumper replacement + paint',
+      corporate: { id: 'demo-corp-4', legalName: 'Greenline Couriers' },
+      vehicle: {
+        id: 'demo-veh-5',
+        registrationNumber: 'KA03EF3205',
+        make: 'Tata',
+        model: 'Intra V30',
+      },
+    }),
+  ];
 }
 
 export async function getServiceRequest(id: string): Promise<ServiceRequestWithRelations> {

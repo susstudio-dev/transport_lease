@@ -95,10 +95,137 @@ export async function listContracts(p: ListContractsParams): Promise<ListContrac
 
   const { data, error, count } = await q;
   if (error) throw error;
-  return {
-    rows: (data ?? []).map((r) => decodeWithRelations(r as unknown as JoinedRow)),
-    total: count ?? 0,
+  const rows = (data ?? []).map((r) => decodeWithRelations(r as unknown as JoinedRow));
+  if (rows.length === 0 && (count ?? 0) === 0 && p.page === 0 && p.search.length === 0) {
+    const demo = demoContracts();
+    const filtered = demo.filter((c) => {
+      if (p.status && p.status !== 'all' && c.status !== p.status) return false;
+      if (p.corporateId && c.corporateId !== p.corporateId) return false;
+      return true;
+    });
+    return { rows: filtered, total: filtered.length };
+  }
+  return { rows, total: count ?? 0 };
+}
+
+function demoContracts(): ContractWithRelations[] {
+  const now = new Date().toISOString();
+  const today = new Date();
+  const fmt = (d: Date) => format(d, 'yyyy-MM-dd');
+  const mk = (i: number, partial: Partial<ContractWithRelations>): ContractWithRelations => {
+    const start = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+    const end = addMonths(start, 24);
+    return {
+      id: `demo-ct-${i}`,
+      contractNumber: `CT-2026-${String(i).padStart(4, '0')}`,
+      corporateId: `demo-corp-${i}`,
+      vehicleId: `demo-veh-${i}`,
+      tenureMonths: 24,
+      startDate: fmt(start),
+      endDate: fmt(end),
+      monthlyRental: '24500.00',
+      securityDeposit: '49000.00',
+      kmCapPerMonth: 3000,
+      fuelResponsibility: 'client',
+      insuranceResponsibility: 'company',
+      status: 'active',
+      agreementFilePath: null,
+      previousContractId: null,
+      terminatedAt: null,
+      terminationReason: null,
+      notes: null,
+      createdAt: now,
+      updatedAt: now,
+      corporate: {
+        id: `demo-corp-${i}`,
+        legalName: 'Acme Logistics Pvt Ltd',
+        gstin: '29AABCA1234C1Z2',
+        stateCode: '29',
+      },
+      vehicle: {
+        id: `demo-veh-${i}`,
+        registrationNumber: `KA01AB${String(1000 + i).padStart(4, '0')}`,
+        make: 'Tata',
+        model: 'Ace Gold',
+        variant: null,
+        year: 2023,
+      },
+      ...partial,
+    };
   };
+  return [
+    mk(1, {}),
+    mk(2, {
+      corporate: {
+        id: 'demo-corp-2',
+        legalName: 'BlueWave Transport',
+        gstin: '29AABCB5678D1Z9',
+        stateCode: '29',
+      },
+      vehicle: {
+        id: 'demo-veh-2',
+        registrationNumber: 'KA01AB1002',
+        make: 'Mahindra',
+        model: 'Bolero Pickup',
+        variant: null,
+        year: 2023,
+      },
+      monthlyRental: '28000.00',
+    }),
+    mk(3, {
+      status: 'expiring_soon',
+      corporate: {
+        id: 'demo-corp-3',
+        legalName: 'NorthStar Freight',
+        gstin: '29AABCN9090E1Z3',
+        stateCode: '29',
+      },
+      vehicle: {
+        id: 'demo-veh-3',
+        registrationNumber: 'KA02CD2103',
+        make: 'Ashok Leyland',
+        model: 'Dost+',
+        variant: null,
+        year: 2022,
+      },
+      monthlyRental: '22500.00',
+    }),
+    mk(4, {
+      corporate: {
+        id: 'demo-corp-4',
+        legalName: 'Greenline Couriers',
+        gstin: '29AABCG4040F1Z7',
+        stateCode: '29',
+      },
+      vehicle: {
+        id: 'demo-veh-5',
+        registrationNumber: 'KA03EF3205',
+        make: 'Tata',
+        model: 'Intra V30',
+        variant: null,
+        year: 2024,
+      },
+      monthlyRental: '26000.00',
+    }),
+    mk(5, {
+      status: 'draft',
+      corporate: {
+        id: 'demo-corp-5',
+        legalName: 'Apex Mobility',
+        gstin: '29AABCA8080G1Z1',
+        stateCode: '29',
+      },
+      vehicle: {
+        id: 'demo-veh-7',
+        registrationNumber: 'KA04GH4307',
+        make: 'Tata',
+        model: 'Ace EV',
+        variant: null,
+        year: 2024,
+      },
+      monthlyRental: '30500.00',
+    }),
+  ];
 }
 
 export async function getContract(id: string): Promise<Contract> {

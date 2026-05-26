@@ -65,7 +65,74 @@ export async function listCorporates(p: ListCorporatesParams): Promise<ListCorpo
 
   const { data, error, count } = await q;
   if (error) throw error;
-  return { rows: (data ?? []).map(decode), total: count ?? 0 };
+  const rows = (data ?? []).map(decode);
+  if (rows.length === 0 && (count ?? 0) === 0 && p.page === 0 && p.search.length === 0) {
+    const demo = demoCorporates();
+    const filtered = demo.filter((c) => !p.status || p.status === 'all' || c.status === p.status);
+    return { rows: filtered, total: filtered.length };
+  }
+  return { rows, total: count ?? 0 };
+}
+
+function demoCorporates(): Corporate[] {
+  const now = new Date().toISOString();
+  const mk = (i: number, partial: Partial<Corporate>): Corporate => ({
+    id: `demo-corp-${i}`,
+    legalName: 'Acme Logistics Pvt Ltd',
+    displayName: 'Acme Logistics',
+    gstin: '29AABCA1234C1Z2',
+    pan: 'AABCA1234C',
+    stateCode: '29',
+    primaryContactName: 'Ravi Kumar',
+    primaryContactEmail: 'ops@acmelog.in',
+    primaryContactPhone: '+91 98450 12345',
+    billingAddress: { line1: 'MG Road', city: 'Bengaluru', state: 'Karnataka', pincode: '560001' },
+    status: 'active',
+    notes: null,
+    createdAt: now,
+    updatedAt: now,
+    ...partial,
+  });
+  return [
+    mk(1, {}),
+    mk(2, {
+      legalName: 'BlueWave Transport Pvt Ltd',
+      displayName: 'BlueWave Transport',
+      gstin: '29AABCB5678D1Z9',
+      pan: 'AABCB5678D',
+      primaryContactName: 'Anita Rao',
+      primaryContactEmail: 'fleet@bluewave.in',
+      primaryContactPhone: '+91 98860 67891',
+    }),
+    mk(3, {
+      legalName: 'NorthStar Freight Pvt Ltd',
+      displayName: 'NorthStar Freight',
+      gstin: '29AABCN9090E1Z3',
+      pan: 'AABCN9090E',
+      primaryContactName: 'Manoj Iyer',
+      primaryContactEmail: 'ops@northstarfreight.com',
+      primaryContactPhone: '+91 99020 33445',
+    }),
+    mk(4, {
+      legalName: 'Greenline Couriers Pvt Ltd',
+      displayName: 'Greenline Couriers',
+      gstin: '29AABCG4040F1Z7',
+      pan: 'AABCG4040F',
+      primaryContactName: 'Priya Nair',
+      primaryContactEmail: 'ops@greenline.in',
+      primaryContactPhone: '+91 96320 11223',
+    }),
+    mk(5, {
+      legalName: 'Apex Mobility Solutions',
+      displayName: 'Apex Mobility',
+      gstin: '29AABCA8080G1Z1',
+      pan: 'AABCA8080G',
+      primaryContactName: 'Karthik Shenoy',
+      primaryContactEmail: 'admin@apexmobility.in',
+      primaryContactPhone: '+91 97400 99887',
+      status: 'inactive',
+    }),
+  ];
 }
 
 export async function getCorporate(id: string): Promise<Corporate> {

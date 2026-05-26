@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { RoleRoute } from './RoleRoute';
-import { RoleRedirect } from './RoleRedirect';
 import { AppShell } from '@/components/layout/AppShell';
+import { LandingPage } from '@/app/LandingPage';
 import { LoginPage } from '@/app/auth/LoginPage';
 import { ForgotPasswordPage } from '@/app/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/app/auth/ResetPasswordPage';
@@ -22,6 +22,8 @@ import { AdminServiceRequestDetailPage } from '@/app/admin/service-requests/Serv
 import { AdminInvoicesListPage } from '@/app/admin/invoices/InvoicesListPage';
 import { InvoiceFormPage as AdminInvoiceFormPage } from '@/app/admin/invoices/InvoiceFormPage';
 import { AdminInvoiceDetailPage } from '@/app/admin/invoices/InvoiceDetailPage';
+import { ReportsPage } from '@/app/admin/reports/ReportsPage';
+import { SettingsPage } from '@/app/admin/settings/SettingsPage';
 import { CorporateDashboardPage } from '@/app/corporate/DashboardPage';
 import { CorporateVehiclesPage } from '@/app/corporate/VehiclesPage';
 import { CorporateVehicleDetailPage } from '@/app/corporate/VehicleDetailPage';
@@ -37,7 +39,7 @@ import { FinanceDashboardPage } from '@/app/finance/DashboardPage';
 import { NotFoundPage } from '@/app/NotFoundPage';
 
 export const router = createBrowserRouter([
-  { path: '/', element: <RoleRedirect /> },
+  { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
@@ -77,6 +79,8 @@ export const router = createBrowserRouter([
               { path: 'invoices/new', element: <AdminInvoiceFormPage /> },
               { path: 'invoices/:id', element: <AdminInvoiceDetailPage /> },
               { path: 'invoices/:id/edit', element: <AdminInvoiceFormPage /> },
+              { path: 'reports', element: <ReportsPage /> },
+              { path: 'settings', element: <SettingsPage /> },
             ],
           },
           {

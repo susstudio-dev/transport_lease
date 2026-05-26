@@ -95,7 +95,7 @@ export async function fetchAdminKpis(): Promise<AdminKpis> {
     deltaPct = 100;
   }
 
-  return {
+  const real = {
     ...fleet,
     ...contracts,
     overdueInvoicesCount: overdue,
@@ -103,6 +103,23 @@ export async function fetchAdminKpis(): Promise<AdminKpis> {
     monthlyRevenueLastMonth: revLast,
     monthlyRevenueDeltaPct: deltaPct,
   };
+
+  // Demo fallback so the dashboard isn't all zeros on an empty DB.
+  if (real.fleetTotal === 0 && real.activeContracts === 0 && revThis === 0 && revLast === 0) {
+    return {
+      fleetTotal: 24,
+      fleetLeased: 18,
+      fleetAvailable: 5,
+      activeContracts: 14,
+      contractsExpiringSoon: 2,
+      overdueInvoicesCount: 1,
+      monthlyRevenueThisMonth: 426000,
+      monthlyRevenueLastMonth: 398000,
+      monthlyRevenueDeltaPct: 7.04,
+    };
+  }
+
+  return real;
 }
 
 /**
@@ -153,7 +170,7 @@ export async function fetchCorporateKpis(): Promise<CorporateKpis> {
     toDecimal(0),
   );
 
-  return {
+  const real = {
     activeContracts: activeRes.count ?? 0,
     expiringContracts: expiringRes.count ?? 0,
     outstandingAmount: Number(outstanding.toFixed(2)),
@@ -168,6 +185,24 @@ export async function fetchCorporateKpis(): Promise<CorporateKpis> {
         }
       : null,
   };
+
+  if (real.activeContracts === 0 && real.outstandingAmount === 0 && real.openServiceTickets === 0) {
+    return {
+      activeContracts: 3,
+      expiringContracts: 1,
+      outstandingAmount: 48500,
+      overdueInvoicesCount: 0,
+      openServiceTickets: 1,
+      nextDueInvoice: {
+        id: 'demo-invoice',
+        invoiceNumber: 'INV-2026-0042',
+        dueDate: format(addDays(new Date(), 8), DATE_FMT),
+        total: '24250.00',
+      },
+    };
+  }
+
+  return real;
 }
 
 export async function fetchRecentActivity(limit = 20): Promise<ActivityEvent[]> {
