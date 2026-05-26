@@ -10,9 +10,9 @@ build
 *.local
 
 # Env (only .env.example is committed)
-.env
-.env.local
-.env.*.local
+# .env
+# .env.local
+# .env.*.local
 
 # Editor / OS
 .vscode/*
